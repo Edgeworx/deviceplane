@@ -1,0 +1,87 @@
+trigger:
+  tags:
+    include:
+    - v*
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+    - README.md
+    - CHANGELOG.md
+
+variables:
+  jobuuid: $(Build.BuildId)$(Agent.Id)
+  build: $(Build.BuildId)
+  ref: $(Build.SourceBranch)
+  commit: $(Build.SourceVersion)
+  branch: $(Build.SourceBranchName)
+  isTaggedCommit: 'no'
+  version:
+  repository:
+  registry:
+  prefix: gcr.io
+
+jobs:
+- job: DevicePlane
+  pool:
+    vmImage: 'Ubuntu-16.04'
+
+  steps:
+
+  - script: |
+      VERS=$(branch)-$(echo $(commit) | cut -c1-10)
+      REPO='focal-freedom-236620/deviceplane'
+      REG='Edgeworx GCP'
+      if [[ $(ref) == refs/tags* ]]; then
+        VERS=$(echo $(ref) | sed "s|refs/tags/v||g")
+        REPO='edgeworx/deviceplane'
+        REG='Edgeworx-Dockerhub'
+        echo "##vso[task.setvariable variable=isTaggedCommit]yes"
+        echo "##vso[task.setvariable variable=prefix]docker.io"
+      fi
+      echo "##vso[task.setvariable variable=version]$VERS"
+      echo "##vso[task.setvariable variable=repository]$REPO"
+      echo "##vso[task.setvariable variable=registry]$REG"
+      echo "Version: $VERS"
+      echo "Registry: $REG"
+      echo "Repository: $REPO"
+    displayName: 'Set variables'
+
+  - task: Docker@2
+    displayName: 'Build image'
+    inputs:
+      command: 'build'
+      Dockerfile: './dockerfiles/controller-with-db/Dockerfile'
+      buildContext: './'
+      repository: $(prefix)/$(repository)
+      arguments: --build-arg version=$(version)
+      tags: |
+        $(version)
+        latest
+
+  - task: Docker@2
+    condition: eq(variables.isTaggedCommit, 'no')
+    displayName: 'Push image (develop)'
+    inputs:
+      containerRegistry: 'Edgeworx GCP'
+      repository: $(repository)
+      command: 'push'
+      Dockerfile: './dockerfiles/controller-with-db/Dockerfile'
+      buildContext: './'
+      tags: |
+        $(version)
+        latest
+
+  - task: Docker@2
+    condition: eq(variables.isTaggedCommit, 'yes')
+    displayName: 'Push image (release)'
+    inputs:
+      containerRegistry: Edgeworx-Dockerhub
+      repository: $(repository)
+      command: 'push'
+      Dockerfile: './dockerfiles/controller-with-db/Dockerfile'
+      buildContext: './'
+      tags: |
+        $(version)
+        latest
