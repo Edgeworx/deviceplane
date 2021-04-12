@@ -1,0 +1,75 @@
+trigger:
+  tags:
+    include:
+    - v*
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+    - README.md
+    - CHANGELOG.md
+
+variables:
+  jobuuid: $(Build.BuildId)$(Agent.Id)
+  build: $(Build.BuildId)
+  ref: $(Build.SourceBranch)
+  commit: $(Build.SourceVersion)
+  branch: $(Build.SourceBranchName)
+  isTaggedCommit: 'no'
+  version:
+  repository:
+  registry:
+
+jobs:
+- job: DevicePlane
+  pool:
+    vmImage: 'Ubuntu-16.04'
+
+  steps:
+
+  - script: |
+      VERS=$(branch)-$(echo $(commit) | cut -c1-10)
+      REPO='focal-freedom-236620/deviceplane'
+      REG='Edgeworx GCP'
+      if [[ $(ref) == refs/tags* ]]; then
+        VERS=$(echo $(ref) | sed "s|refs/tags/v||g")
+        REPO='edgeworx/deviceplane'
+        REG='Edgeworx-Dockerhub'
+        echo "##vso[task.setvariable variable=isTaggedCommit]yes"
+      fi
+      echo "##vso[task.setvariable variable=version]$VERS"
+      echo "##vso[task.setvariable variable=repository]$REPO"
+      echo "##vso[task.setvariable variable=registry]$REG"
+      echo "Version: $VERS"
+      echo "Registry: $REG"
+      echo "Repository: $REPO"
+    displayName: 'Set variables'
+
+  - task: Docker@2
+    condition: eq(variables.isTaggedCommit, 'no')
+    displayName: 'Push to Dockerhub (Release)'
+    inputs:
+      containerRegistry: 'Edgeworx GCP' # Cannot be variable
+      repository: $(repository)
+      command: 'buildAndPush'
+      Dockerfile: './dockerfiles/controller-with-db/Dockerfile'
+      buildContext: './'
+      arguments: --build-arg version=$(version)
+      tags: |
+        $(version)
+        latest
+
+  - task: Docker@2
+    condition: eq(variables.isTaggedCommit, 'yes')
+    displayName: 'Push to GCR'
+    inputs:
+      containerRegistry: 'Edgeworx-Dockerhub' # Cannot be variable
+      repository: $(repository)
+      command: 'buildAndPush'
+      Dockerfile: './dockerfiles/controller-with-db/Dockerfile'
+      buildContext: './'
+      arguments: --build-arg version=$(version)
+      tags: |
+        $(version)
+        latest
