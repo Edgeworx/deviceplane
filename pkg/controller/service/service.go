@@ -144,7 +144,9 @@ func NewService(
 			WriteBufferSize: 1024,
 			Subprotocols:    []string{"binary"},
 			CheckOrigin: func(r *http.Request) bool {
-				return utils.CheckSameOrAllowedOrigin(r, allowedOrigins)
+				// TODO: Replace this with appropriate func
+				// return utils.CheckSameOrAllowedOrigin(r, allowedOrigins)
+				return true
 			},
 		},
 	}
