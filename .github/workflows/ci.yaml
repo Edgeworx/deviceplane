@@ -23,15 +23,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      #   - name: Detect Environment
-      #     uses: edgeworx/detect-environment-action@master
-      #     id: env
+      - name: Detect Environment
+        uses: edgeworx/detect-environment-action@master
+        id: env
+
       - name: Build and Publish Artifacts
         uses: edgeworx/build-push-ghcr-action@master
         with:
           build-args: |
             version=${{ github.ref_name }}
           image-name: ${{ env.IMAGE_NAME }}
-          #   kustomization: "deploy/kustomize/overlays/${{ steps.env.outputs.environment }}"
           push-image: ${{ github.event_name != 'pull_request' }}
-        #   push-manifests: ${{ github.event_name != 'pull_request' }}
