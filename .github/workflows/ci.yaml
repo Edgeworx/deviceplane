@@ -63,7 +63,7 @@ jobs:
 
       - name: Sign Container Images
         shell: bash
-        if: ${{ inputs.push-image == 'true' }}
+        if: ${{ github.event_name != 'pull_request' }}
         env:
           REPO: "ghcr.io/edgeworx/${{ env.IMAGE_NAME }}"
           COSIGN_EXPERIMENTAL: "1"
