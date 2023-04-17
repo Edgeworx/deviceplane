@@ -23,14 +23,45 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Detect Environment
-        uses: edgeworx/detect-environment-action@master
-        id: env
-
-      - name: Build and Publish Artifacts
-        uses: edgeworx/build-push-ghcr-action@master
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v2
         with:
+          registry: "ghcr.io"
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Determine Artifact Tags
+        shell: bash
+        id: tags
+        env:
+          REPO: "ghcr.io/edgeworx/${{ env.IMAGE_NAME }}"
+        run: |
+          IMAGES="${REPO}:latest,${REPO}:${{ github.sha }}"
+          if [[ "${{ github.ref_name }}" == "master" ]] || [[ "${{ github.ref_name }}" == "main" ]] ; then
+              IMAGES+=",${REPO}:stable"
+          fi
+          if [[ ${{ github.ref_name }} =~ ^v.* ]] ; then
+              IMAGES+=",${REPO}:${{ github.ref_name }}"
+          fi
+          echo "IMAGES=${IMAGES}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build and Push Container Image
+        uses: docker/build-push-action@v3
+        id: build
+        with:
+          context: .
+          file: dockerfiles/controller/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.tags.outputs.IMAGES }}
           build-args: |
             version=${{ github.ref_name }}
-          image-name: ${{ env.IMAGE_NAME }}
-          push-image: ${{ github.event_name != 'pull_request' }}
+          cache-to: type=gha
+          cache-from: type=gha
+
+      - name: Sign Container Images
+        shell: bash
+        if: ${{ inputs.push-image == 'true' }}
+        env:
+          REPO: "ghcr.io/edgeworx/${{ env.IMAGE_NAME }}"
+          COSIGN_EXPERIMENTAL: "1"
+        run: cosign sign --recursive ${REPO}@${{ steps.build.outputs.digest }}
