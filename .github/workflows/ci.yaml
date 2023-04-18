@@ -70,4 +70,4 @@ jobs:
         env:
           REPO: "ghcr.io/edgeworx/${{ env.IMAGE_NAME }}"
           COSIGN_EXPERIMENTAL: "1"
-        run: cosign sign --force --recursive ${REPO}@${{ steps.build.outputs.digest }}
+        run: cosign sign -y --recursive ${REPO}@${{ steps.build.outputs.digest }}
