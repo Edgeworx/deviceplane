@@ -89,8 +89,7 @@ jobs:
         run: |
           set -ex
           kustomizer push artifact ${ARTIFACT}:${{ github.ref_name }} \
-            --filename "${{ inputs.manifests }}" \
-            --sign \
+            --filename "deploy/" \
             --source=${{ github.repositoryUrl }} \
             --revision="${{ github.ref_name }}/${{ github.sha }}"
           kustomizer tag artifact ${ARTIFACT}:${{ github.ref_name }} latest
