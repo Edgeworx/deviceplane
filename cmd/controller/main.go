@@ -4,20 +4,22 @@ import (
 	"database/sql"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/apex/log"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/handlers"
+	"github.com/rakyll/statik/fs"
+	"gopkg.in/alecthomas/kingpin.v2"
+
 	"github.com/deviceplane/deviceplane/pkg/controller/connman"
 	"github.com/deviceplane/deviceplane/pkg/controller/service"
 	mysql_store "github.com/deviceplane/deviceplane/pkg/controller/store/mysql"
 	"github.com/deviceplane/deviceplane/pkg/email"
 	"github.com/deviceplane/deviceplane/pkg/email/smtp"
 	_ "github.com/deviceplane/deviceplane/pkg/statik"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/gorilla/handlers"
-	"github.com/rakyll/statik/fs"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var version = "dev"
@@ -30,7 +32,7 @@ var (
 		String()
 	mysql = kingpin.
 		Flag("mysql", "").
-		Default("deviceplane:deviceplane@tcp(localhost:3306)/deviceplane?parseTime=true").
+		Default(os.Getenv("MYSQL_URI")).
 		String()
 	statsdAddress = kingpin.
 			Flag("statsd", "").
@@ -64,6 +66,7 @@ var (
 			String()
 	smtpPassword = kingpin.
 			Flag("smtp-password", "").
+			Default(os.Getenv("SMTP_PASSWORD")).
 			String()
 	dbMaxOpenConns = kingpin.
 			Flag("db-max-open-conns", "50").
@@ -76,9 +79,11 @@ var (
 				Duration()
 	auth0Domain = kingpin.
 			Flag("auth0-domain", "").
+			Default(os.Getenv("AUTH0_DOMAIN")).
 			URL()
 	auth0Audience = kingpin.
 			Flag("auth0-audience", "").
+			Default(os.Getenv("AUTH0_AUDIENCE")).
 			String()
 )
 

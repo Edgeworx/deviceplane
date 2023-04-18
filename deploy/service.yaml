@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: deviceplane
+  namespace: deviceplane
+  labels:
+    app: deviceplane
+spec:
+  type: ClusterIP
+  selector:
+    app: deviceplane
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http

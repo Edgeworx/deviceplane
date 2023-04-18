@@ -71,3 +71,26 @@ jobs:
           REPO: "ghcr.io/edgeworx/${{ env.IMAGE_NAME }}"
           COSIGN_EXPERIMENTAL: "1"
         run: cosign sign -y --recursive ${REPO}@${{ steps.build.outputs.digest }}
+
+      - name: Install Kustomize Utilities
+        if: ${{ github.event_name != 'pull_request' }}
+        shell: bash
+        run: |
+          which kustomize &> /dev/null || curl -s \
+            "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" \
+            | bash
+          which kustomizer &> /dev/null || curl -s https://kustomizer.dev/install.sh | bash
+
+      - name: Build and Push Kubectl Manifests
+        shell: bash
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          ARTIFACT: "oci://ghcr.io/edgeworx/deviceplane-manifests"
+        run: |
+          set -ex
+          kustomizer push artifact ${ARTIFACT}:${{ github.ref_name }} \
+            --filename "${{ inputs.manifests }}" \
+            --sign \
+            --source=${{ github.repositoryUrl }} \
+            --revision="${{ github.ref_name }}/${{ github.sha }}"
+          kustomizer tag artifact ${ARTIFACT}:${{ github.ref_name }} latest
