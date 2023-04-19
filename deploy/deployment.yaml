@@ -46,7 +46,7 @@ spec:
       serviceAccountName: deviceplane
       containers:
       - name: controller
-        image: gcr.io/edgeworx/deviceplane-controller:latest
+        image: ghcr.io/edgeworx/deviceplane-controller:latest
         imagePullPolicy: Always
         command:
         - /bin/sh
