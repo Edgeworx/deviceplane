@@ -1,15 +1,4 @@
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: deviceplane
-  namespace: deviceplane
-  annotations:
-    vault.hashicorp.com/bind: 'true'
-    vault.hashicorp.com/inline-policy: |
-      path "secret/data/deviceplane" {
-        capabilities = ["read"]
-      }
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -46,7 +35,7 @@ spec:
       serviceAccountName: deviceplane
       containers:
       - name: controller
-        image: gcr.io/edgeworx/deviceplane:latest
+        image: gcr.io/edgeworx/deviceplane-controller:latest
         imagePullPolicy: Always
         command:
         - /bin/sh
