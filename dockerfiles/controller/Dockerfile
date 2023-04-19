@@ -18,7 +18,7 @@ RUN go get github.com/rakyll/statik
 RUN statik -src=./ui/build -dest=./pkg
 RUN GOOS=linux CGO_ENABLED=0 go build -mod vendor -ldflags "-X main.version=$version" -o ./controller ./cmd/controller
 
-FROM scratch
+FROM alpine:3.9
 COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=2 /app/controller /bin/controller
 ENTRYPOINT ["/bin/controller"]
