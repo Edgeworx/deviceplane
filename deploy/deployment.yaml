@@ -41,6 +41,9 @@ spec:
           {{ end }}
           {{- end }}
     spec:
+      imagePullSecrets:
+        - name: ghcr-registry
+      serviceAccountName: deviceplane
       containers:
       - name: controller
         image: gcr.io/edgeworx/deviceplane:latest
