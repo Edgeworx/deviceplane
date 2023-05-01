@@ -99,6 +99,9 @@ func main() {
 		allowedOriginURLs = append(allowedOriginURLs, *originURL)
 	}
 
+	log.Info("Info: Starting up with extra debug info")
+	log.Debug("Debug: Are we seeing debug messages")
+
 	statikFS, err := fs.New()
 	if err != nil {
 		log.WithError(err).Fatal("statik")
