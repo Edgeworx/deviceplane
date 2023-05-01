@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
@@ -85,6 +86,10 @@ var (
 			Flag("auth0-audience", "").
 			Default(os.Getenv("AUTH0_AUDIENCE")).
 			String()
+	logLevel = kingpin.
+			Flag("log-level", "One of: debug, info, warn, error, fatal").
+			Default(os.Getenv("LOG_LEVEL")).
+			String()
 )
 
 func main() {
@@ -99,8 +104,15 @@ func main() {
 		allowedOriginURLs = append(allowedOriginURLs, *originURL)
 	}
 
+	if logLevel == nil || strings.TrimSpace(*logLevel) == "" {
+		log.SetLevel(log.DebugLevel)
+		log.Debug("Log level not set: defaulting to 'debug'")
+	} else {
+		log.SetLevelFromString(*logLevel)
+	}
+
 	log.Info("Info: Starting up with extra debug info")
-	log.Debug("Debug: Are we seeing debug messages")
+	log.Debug("Debug: Are we seeing debug messages?")
 
 	statikFS, err := fs.New()
 	if err != nil {
