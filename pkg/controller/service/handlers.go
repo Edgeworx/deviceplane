@@ -102,7 +102,10 @@ func (s *Service) registerInternalUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		log.Debugf("Internal user created: %s|%s", internalUser.ID, internalUser.Email)
+
 		if s.email == nil {
+			log.Debugf("Email provider is nil: skipping registration workflow")
 			// If email provider is nil then skip the registration workflow
 			user, err := s.users.InitializeUser(r.Context(), &internalUser.ID, nil)
 			if err != nil {
@@ -114,6 +117,8 @@ func (s *Service) registerInternalUser(w http.ResponseWriter, r *http.Request) {
 			utils.Respond(w, user)
 			return
 		}
+
+		log.Debugf("Email provider is present: using email registration workflow")
 
 		registrationTokenValue := ksuid.New().String()
 
