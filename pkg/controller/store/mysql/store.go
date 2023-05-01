@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/apex/log"
 	"github.com/deviceplane/deviceplane/pkg/controller/store"
 	"github.com/deviceplane/deviceplane/pkg/models"
 	"github.com/pkg/errors"
@@ -146,6 +147,8 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) InitializeUser(ctx context.Context, internalUserID, externalUserID *string) (*models.User, error) {
+	log.Debugf("InitializeUser %v, %v", internalUserID, externalUserID)
+
 	id := newUserID()
 
 	if _, err := s.db.ExecContext(

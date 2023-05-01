@@ -109,10 +109,12 @@ func (s *Service) registerInternalUser(w http.ResponseWriter, r *http.Request) {
 			// If email provider is nil then skip the registration workflow
 			user, err := s.users.InitializeUser(r.Context(), &internalUser.ID, nil)
 			if err != nil {
-				log.WithError(err).Error("mark internal user registration completed")
+				log.WithError(err).Error("Nil email provider: mark internal user registration completed")
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
+
+			log.Debugf("User is initialized: %s|%s|%s|%s", user.ID, user.Name, user.InternalUserID, user.ExternalUserID)
 
 			utils.Respond(w, user)
 			return
